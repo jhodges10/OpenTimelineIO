@@ -17,8 +17,9 @@ namespace opentimelineio { namespace OPENTIMELINEIO_VERSION_NS {
 ///   effect name for host-native effects)
 /// - the version of the effect that authored the parameter values
 /// - the host application (and version) that authored the values
-/// - the context the effect operates in (filter, transition, generator,
-///   audio_filter, or audio_transition), mirroring OpenFX contexts
+/// - the context the effect operates in (video_filter, video_transition,
+///   video_generator, audio_filter, audio_transition, or audio_generator),
+///   a media-kind-qualified form of the OpenFX context model
 /// - a dictionary of parameter values keyed by the effect's stable
 ///   parameter script names
 ///
@@ -52,8 +53,9 @@ public:
     /// @param effect_version The version of the effect.
     /// @param host The host application that authored the parameter values.
     /// @param host_version The version of the host application.
-    /// @param context The context the effect operates in. One of "filter",
-    /// "transition", "generator", "audio_filter", or "audio_transition".
+    /// @param context The context the effect operates in. One of
+    /// "video_filter", "video_transition", "video_generator",
+    /// "audio_filter", "audio_transition", or "audio_generator".
     /// @param parameters The parameter values, keyed by stable parameter
     /// script name.
     OTIO_API ParameterizedEffect(

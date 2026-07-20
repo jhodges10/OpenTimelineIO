@@ -20,7 +20,7 @@ class ParameterizedEffectTest(unittest.TestCase, otio_test_utils.OTIOAssertions)
             effect_version="1.2.3",
             host="Resolve",
             host_version="19.0",
-            context="filter",
+            context="video_filter",
             parameters={
                 "scale": 0.73,
                 "rotation": 37.0,
@@ -46,7 +46,7 @@ class ParameterizedEffectTest(unittest.TestCase, otio_test_utils.OTIOAssertions)
         self.assertEqual(pe.effect_version, "1.2.3")
         self.assertEqual(pe.host, "Resolve")
         self.assertEqual(pe.host_version, "19.0")
-        self.assertEqual(pe.context, "filter")
+        self.assertEqual(pe.context, "video_filter")
         self.assertEqual(pe.parameters["scale"], 0.73)
         self.assertEqual(pe.parameters["position"]["type"], "2D XY")
         self.assertEqual(pe.parameters["position"]["x"], -72.4465649)
@@ -65,13 +65,13 @@ class ParameterizedEffectTest(unittest.TestCase, otio_test_utils.OTIOAssertions)
         pe.effect_version = "2.0"
         pe.host = "Media Composer"
         pe.host_version = "2025.12"
-        pe.context = "transition"
+        pe.context = "video_transition"
         pe.parameters["width"] = 50
         self.assertEqual(pe.effect_id, "com.example.blur")
         self.assertEqual(pe.effect_version, "2.0")
         self.assertEqual(pe.host, "Media Composer")
         self.assertEqual(pe.host_version, "2025.12")
-        self.assertEqual(pe.context, "transition")
+        self.assertEqual(pe.context, "video_transition")
         self.assertEqual(pe.parameters["width"], 50)
 
     def test_serialize(self):
@@ -82,14 +82,14 @@ class ParameterizedEffectTest(unittest.TestCase, otio_test_utils.OTIOAssertions)
             effect_version="1.2.3",
             host="Resolve",
             host_version="19.0",
-            context="filter",
+            context="video_filter",
             parameters={"brightness": 1.0, "lens": "105mm Prime"},
         )
         encoded = otio.adapters.otio_json.write_to_string(pe)
         decoded = otio.adapters.otio_json.read_from_string(encoded)
         self.assertJsonEqual(pe, decoded)
         self.assertEqual(decoded.effect_id, "com.acme-vfx.lensflare")
-        self.assertEqual(decoded.context, "filter")
+        self.assertEqual(decoded.context, "video_filter")
         self.assertEqual(decoded.parameters["brightness"], 1.0)
         self.assertEqual(decoded.parameters["lens"], "105mm Prime")
 
@@ -101,7 +101,7 @@ class ParameterizedEffectTest(unittest.TestCase, otio_test_utils.OTIOAssertions)
                     name="pip",
                     effect_name="Picture-in-Picture",
                     effect_id="com.example.pip",
-                    context="filter",
+                    context="video_filter",
                     parameters={"scale": 0.5},
                 )
             ],

@@ -1315,9 +1315,9 @@ as nested dictionaries carrying a ``type`` key.
             "context",
             &ParameterizedEffect::context,
             &ParameterizedEffect::set_context,
-            "Context the effect operates in. One of ``filter``, "
-            "``transition``, ``generator``, ``audio_filter``, or "
-            "``audio_transition``.")
+            "Context the effect operates in. One of ``video_filter``, "
+            "``video_transition``, ``video_generator``, ``audio_filter``, "
+            "``audio_transition``, or ``audio_generator``.")
         .def_property_readonly(
             "parameters",
             [](ParameterizedEffect* effect) {
