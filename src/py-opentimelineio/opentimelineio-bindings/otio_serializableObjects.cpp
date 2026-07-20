@@ -21,6 +21,7 @@
 #include "opentimelineio/marker.h"
 #include "opentimelineio/mediaReference.h"
 #include "opentimelineio/missingReference.h"
+#include "opentimelineio/parameterizedEffect.h"
 #include "opentimelineio/serializableCollection.h"
 #include "opentimelineio/stack.h"
 #include "opentimelineio/timeEffect.h"
@@ -1238,6 +1239,93 @@ define_effects(py::module m)
             &Effect::enabled,
             &Effect::set_enabled,
             "If true, the Effect is applied. If false, the Effect is omitted.");
+
+    py::class_<
+        ParameterizedEffect,
+        Effect,
+        managing_ptr<ParameterizedEffect>>(
+        m,
+        "ParameterizedEffect",
+        py::dynamic_attr(),
+        R"docstring(
+An effect with a stable identity and a dictionary of typed parameter values,
+suitable for interchange between host applications.
+
+``effect_id`` is a stable, host-independent identifier for the effect (for
+example an OpenFX plugin identifier such as ``com.acme-vfx.lensflare``, or a
+generalized effect name for host-native effects). ``parameters`` holds the
+effect's parameter values keyed by the effect's stable parameter script
+names. Structured parameter values (2D points, colors, choices) are stored
+as nested dictionaries carrying a ``type`` key.
+)docstring")
+        .def(
+            py::init([](std::string name,
+                        std::string effect_name,
+                        py::object  metadata,
+                        py::bool_   enabled,
+                        std::string effect_id,
+                        std::string effect_version,
+                        std::string host,
+                        std::string host_version,
+                        std::string context,
+                        py::object  parameters) {
+                return new ParameterizedEffect(
+                    name,
+                    effect_name,
+                    py_to_any_dictionary(metadata),
+                    enabled,
+                    effect_id,
+                    effect_version,
+                    host,
+                    host_version,
+                    context,
+                    py_to_any_dictionary(parameters));
+            }),
+            py::arg_v("name"_a = std::string()),
+            "effect_name"_a = std::string(),
+            py::arg_v("metadata"_a = py::none()),
+            "enabled"_a = true,
+            "effect_id"_a = std::string(),
+            "effect_version"_a = std::string(),
+            "host"_a = std::string(),
+            "host_version"_a = std::string(),
+            "context"_a = std::string(),
+            py::arg_v("parameters"_a = py::none()))
+        .def_property(
+            "effect_id",
+            &ParameterizedEffect::effect_id,
+            &ParameterizedEffect::set_effect_id,
+            "Stable, host-independent identifier for the effect.")
+        .def_property(
+            "effect_version",
+            &ParameterizedEffect::effect_version,
+            &ParameterizedEffect::set_effect_version,
+            "Version of the effect that authored ``parameters``.")
+        .def_property(
+            "host",
+            &ParameterizedEffect::host,
+            &ParameterizedEffect::set_host,
+            "Host application that authored ``parameters``.")
+        .def_property(
+            "host_version",
+            &ParameterizedEffect::host_version,
+            &ParameterizedEffect::set_host_version,
+            "Version of the host application.")
+        .def_property(
+            "context",
+            &ParameterizedEffect::context,
+            &ParameterizedEffect::set_context,
+            "Context the effect operates in. One of ``filter``, "
+            "``transition``, ``generator``, ``audio_filter``, or "
+            "``audio_transition``.")
+        .def_property_readonly(
+            "parameters",
+            [](ParameterizedEffect* effect) {
+                auto ptr = effect->parameters().get_or_create_mutation_stamp();
+                return (AnyDictionaryProxy*) ptr;
+            },
+            py::return_value_policy::take_ownership,
+            "Parameter values keyed by stable parameter script name.");
 
     py::class_<TimeEffect, Effect, managing_ptr<TimeEffect>>(
         m,
