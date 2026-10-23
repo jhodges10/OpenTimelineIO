@@ -4,12 +4,16 @@
 #pragma once
 
 #include "opentimelineio/composable.h"
+#include "opentimelineio/effect.h"
 #include "opentimelineio/version.h"
 
 namespace opentimelineio { namespace OPENTIMELINEIO_VERSION_NS {
 /// @brief Represents a transition between the two adjacent items in a Track.
 ///
 /// For example, a cross dissolve or wipe.
+///
+/// Version 2 adds an optional effect: the operation the transition
+/// performs, such as an "otio.fx.wipe" with its parameters.
 class OTIO_API_TYPE Transition : public Composable
 {
 public:
@@ -24,7 +28,7 @@ public:
     struct Schema
     {
         static auto constexpr name   = "Transition";
-        static int constexpr version = 1;
+        static int constexpr version = 2;
     };
 
     using Parent = Composable;
@@ -36,13 +40,16 @@ public:
     /// @param in_offset The in time offset.
     /// @param out_offset The out time offset.
     /// @param metadata The metadata for the transition.
+    /// @param enabled Whether the transition is enabled.
+    /// @param effect The effect the transition performs, or null.
     OTIO_API Transition(
         std::string const&   name            = std::string(),
         std::string const&   transition_type = std::string(),
         RationalTime         in_offset       = RationalTime(),
         RationalTime         out_offset      = RationalTime(),
         AnyDictionary const& metadata        = AnyDictionary(),
-        bool                 enabled         = true);
+        bool                 enabled         = true,
+        Effect*              effect          = nullptr);
 
     bool overlapping() const override;
 
@@ -79,6 +86,12 @@ public:
     /// @brief Set whether the transition is enabled.
     void set_enabled(bool enabled) { _enabled = enabled; }
 
+    /// @brief Return the effect the transition performs, or null.
+    Effect* effect() const noexcept { return _effect; }
+
+    /// @brief Set the effect the transition performs; null clears it.
+    void set_effect(Effect* effect) { _effect = effect; }
+
     RationalTime duration(ErrorStatus* error_status = nullptr) const override;
 
     /// @brief Return the range in the parent's time.
@@ -99,6 +112,7 @@ private:
     std::string  _transition_type;
     RationalTime _in_offset, _out_offset;
     bool _enabled;
+    Retainer<Effect> _effect;
 };
 
 }} // namespace opentimelineio::OPENTIMELINEIO_VERSION_NS

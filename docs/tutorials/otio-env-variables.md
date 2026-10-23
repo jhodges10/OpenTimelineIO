@@ -18,6 +18,10 @@ OTIO_DEFAULT_MEDIA_LINKER
    The name of the default media linker to use after reading a file, if `""` then no
    media linker is automatically invoked.
 
+OTIO_DEFAULT_EFFECTS_LINKER
+   The name of the default effects linker to use after reading a file (and after the
+   media linker), if `""` then no effects linker is automatically invoked.
+
 OTIO_DISABLE_ENTRYPOINTS_PLUGINS
    By default, OTIO will use the `importlib.metadata` entry_points mechanism to discover plugins
    that have been installed into the current python environment. For users who wish to disable this

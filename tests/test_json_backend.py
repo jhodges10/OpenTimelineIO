@@ -112,10 +112,6 @@ class TestJsonFormat(unittest.TestCase, otio_test_utils.OTIOAssertions):
         mr = otio.schema.Effect()
         self.check_against_baseline(mr, "empty_effect")
 
-    def test_parameterized_effect(self):
-        pe = otio.schema.ParameterizedEffect()
-        self.check_against_baseline(pe, "empty_parameterizedeffect")
-
     def test_transition(self):
         trx = otio.schema.Transition()
         self.check_against_baseline(trx, "empty_transition")

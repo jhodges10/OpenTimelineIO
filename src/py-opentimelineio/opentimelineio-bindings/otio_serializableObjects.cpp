@@ -21,7 +21,6 @@
 #include "opentimelineio/marker.h"
 #include "opentimelineio/mediaReference.h"
 #include "opentimelineio/missingReference.h"
-#include "opentimelineio/parameterizedEffect.h"
 #include "opentimelineio/serializableCollection.h"
 #include "opentimelineio/stack.h"
 #include "opentimelineio/timeEffect.h"
@@ -690,21 +689,24 @@ An object that can be composed within a :class:`~Composition` (such as :class:`~
                             RationalTime       in_offset,
                             RationalTime       out_offset,
                             py::object         metadata,
-                            py::bool_            enabled) {
+                            py::bool_            enabled,
+                            Effect*            effect) {
                     return new Transition(
                         name,
                         transition_type,
                         in_offset,
                         out_offset,
                         py_to_any_dictionary(metadata),
-                        enabled);
+                        enabled,
+                        effect);
                 }),
                 py::arg_v("name"_a = std::string()),
                 "transition_type"_a = std::string(),
                 "in_offset"_a       = RationalTime(),
                 "out_offset"_a      = RationalTime(),
                 py::arg_v("metadata"_a = py::none()),
-                "enabled"_a = true)
+                "enabled"_a = true,
+                "effect"_a  = nullptr)
             .def_property(
                 "transition_type",
                 &Transition::transition_type,
@@ -725,6 +727,11 @@ An object that can be composed within a :class:`~Composition` (such as :class:`~
                 &Transition::enabled,
                 &Transition::set_enabled,
                 "If true, a Transition contributes to compositions. For example, when a transition is ``enabled=false`` the transition is ignored and the adjacent clips are cut together with no transition.")
+            .def_property(
+                "effect",
+                &Transition::effect,
+                &Transition::set_effect,
+                "The :class:`.Effect` the transition performs, such as an ``otio.fx.wipe``, or ``None``.")
             .def(
                 "duration",
                 [](Transition* t) { return t->duration(ErrorStatusHandler()); })
@@ -1214,49 +1221,17 @@ define_effects(py::module m)
     py::class_<Effect, SOWithMetadata, managing_ptr<Effect>>(
         m,
         "Effect",
-        py::dynamic_attr())
-        .def(
-            py::init([](std::string name,
-                        std::string effect_name,
-                        py::object  metadata,
-                        py::bool_   enabled) {
-                return new Effect(
-                    name,
-                    effect_name,
-                    py_to_any_dictionary(metadata),
-                    enabled);
-            }),
-            py::arg_v("name"_a = std::string()),
-            "effect_name"_a = std::string(),
-            py::arg_v("metadata"_a = py::none()),
-            "enabled"_a = true)
-        .def_property(
-            "effect_name",
-            &Effect::effect_name,
-            &Effect::set_effect_name)
-        .def_property(
-            "enabled",
-            &Effect::enabled,
-            &Effect::set_enabled,
-            "If true, the Effect is applied. If false, the Effect is omitted.");
-
-    py::class_<
-        ParameterizedEffect,
-        Effect,
-        managing_ptr<ParameterizedEffect>>(
-        m,
-        "ParameterizedEffect",
         py::dynamic_attr(),
         R"docstring(
-An effect with a stable identity and a dictionary of typed parameter values,
-suitable for interchange between host applications.
+An effect applied to an item, such as an image or audio filter, or performed
+by a :class:`.Transition`.
 
-``effect_id`` is a stable, host-independent identifier for the effect (for
-example an OpenFX plugin identifier such as ``com.acme-vfx.lensflare``, or a
-generalized effect name for host-native effects). ``parameters`` holds the
-effect's parameter values keyed by the effect's stable parameter script
-names. Structured parameter values (2D points, colors, choices) are stored
-as nested dictionaries carrying a ``type`` key.
+``effect_id`` is a stable, host-independent identifier: an OpenFX plugin
+identifier such as ``com.acme-vfx.lensflare``, an ``otio.fx.*`` registry id,
+or a vendor slug. ``parameters`` holds the effect's values keyed by stable
+parameter names; structured values (points, colors, curves) are dictionaries
+carrying a ``type`` key. An effect with these fields empty is a legacy
+``Effect.1``.
 )docstring")
         .def(
             py::init([](std::string name,
@@ -1269,7 +1244,7 @@ as nested dictionaries carrying a ``type`` key.
                         std::string host_version,
                         std::string context,
                         py::object  parameters) {
-                return new ParameterizedEffect(
+                return new Effect(
                     name,
                     effect_name,
                     py_to_any_dictionary(metadata),
@@ -1284,48 +1259,55 @@ as nested dictionaries carrying a ``type`` key.
             py::arg_v("name"_a = std::string()),
             "effect_name"_a = std::string(),
             py::arg_v("metadata"_a = py::none()),
-            "enabled"_a = true,
-            "effect_id"_a = std::string(),
+            "enabled"_a        = true,
+            "effect_id"_a      = std::string(),
             "effect_version"_a = std::string(),
-            "host"_a = std::string(),
-            "host_version"_a = std::string(),
-            "context"_a = std::string(),
+            "host"_a           = std::string(),
+            "host_version"_a   = std::string(),
+            "context"_a        = std::string(),
             py::arg_v("parameters"_a = py::none()))
         .def_property(
+            "effect_name",
+            &Effect::effect_name,
+            &Effect::set_effect_name)
+        .def_property(
+            "enabled",
+            &Effect::enabled,
+            &Effect::set_enabled,
+            "If true, the Effect is applied. If false, the Effect is omitted.")
+        .def_property(
             "effect_id",
-            &ParameterizedEffect::effect_id,
-            &ParameterizedEffect::set_effect_id,
+            &Effect::effect_id,
+            &Effect::set_effect_id,
             "Stable, host-independent identifier for the effect.")
         .def_property(
             "effect_version",
-            &ParameterizedEffect::effect_version,
-            &ParameterizedEffect::set_effect_version,
-            "Version of the effect that authored ``parameters``.")
+            &Effect::effect_version,
+            &Effect::set_effect_version,
+            "Version of the effect that wrote ``parameters``.")
         .def_property(
             "host",
-            &ParameterizedEffect::host,
-            &ParameterizedEffect::set_host,
-            "Host application that authored ``parameters``.")
+            &Effect::host,
+            &Effect::set_host,
+            "Host application that wrote ``parameters``.")
         .def_property(
             "host_version",
-            &ParameterizedEffect::host_version,
-            &ParameterizedEffect::set_host_version,
+            &Effect::host_version,
+            &Effect::set_host_version,
             "Version of the host application.")
         .def_property(
             "context",
-            &ParameterizedEffect::context,
-            &ParameterizedEffect::set_context,
-            "Context the effect operates in. One of ``video_filter``, "
-            "``video_transition``, ``video_generator``, ``audio_filter``, "
-            "``audio_transition``, or ``audio_generator``.")
+            &Effect::context,
+            &Effect::set_context,
+            "Empty, or one of ``filter``, ``transition`` or ``generator``.")
         .def_property_readonly(
             "parameters",
-            [](ParameterizedEffect* effect) {
+            [](Effect* effect) {
                 auto ptr = effect->parameters().get_or_create_mutation_stamp();
                 return (AnyDictionaryProxy*) ptr;
             },
             py::return_value_policy::take_ownership,
-            "Parameter values keyed by stable parameter script name.");
+            "Parameter values keyed by stable parameter name.");
 
     py::class_<TimeEffect, Effect, managing_ptr<TimeEffect>>(
         m,
