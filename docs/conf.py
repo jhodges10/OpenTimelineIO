@@ -99,8 +99,11 @@ linkcheck_exclude_documents = [
     r'cxx/cxx'
 ]
 
-# For some reason this URL gives 403 Forbidden when running in github actions
-linkcheck_ignore = [r'https://opensource.org/licenses/MIT']
+# These URLs give 403 Forbidden to the linkcheck bot (bot/user-agent filtering)
+# even though they work fine in a browser.
+linkcheck_ignore = [
+    r'https://opensource.org/licenses/MIT',
+]
 
 # -- Options for MySt-Parser -----------------------------------------------------------
 # https://myst-parser.readthedocs.io/en/latest/sphinx/reference.html

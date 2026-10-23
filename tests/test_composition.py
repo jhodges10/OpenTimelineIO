@@ -16,6 +16,41 @@ TRANSITION_EXAMPLE_PATH = os.path.join(SAMPLE_DATA_DIR, "transition_test.otio")
 
 class CompositionTests(unittest.TestCase, otio_test_utils.OTIOAssertions):
 
+    def test_trimmed_range_of_nested_child(self):
+        rt = otio.opentime.RationalTime
+        tr = otio.opentime.TimeRange
+        clip = otio.schema.Clip(source_range=tr(rt(100, 24), rt(50, 24)))
+        track = otio.schema.Track(children=[
+            otio.schema.Gap(duration=rt(10, 24)), clip
+        ])
+        stack = otio.schema.Stack(children=[track])
+        outer_track = otio.schema.Track(children=[
+            otio.schema.Gap(duration=rt(20, 24)), stack
+        ])
+        timeline = otio.schema.Timeline(tracks=[outer_track])
+
+        for ancestor, start in (
+            (track, 10),
+            (stack, 10),
+            (outer_track, 30),
+            (timeline.tracks, 30),
+        ):
+            with self.subTest(ancestor=type(ancestor).__name__, start=start):
+                self.assertEqual(
+                    ancestor.trimmed_range_of_child(clip),
+                    tr(rt(start, 24), rt(50, 24)),
+                )
+
+        # A source range on the outermost stack still clips the result.
+        timeline.tracks.source_range = tr(rt(0, 24), rt(40, 24))
+        self.assertEqual(
+            timeline.tracks.trimmed_range_of_child(clip),
+            tr(rt(30, 24), rt(10, 24)),
+        )
+
+        timeline.tracks.source_range = tr(rt(0, 24), rt(20, 24))
+        self.assertIsNone(timeline.tracks.trimmed_range_of_child(clip))
+
     def test_cons(self):
         it = otio.core.Item()
         co = otio.core.Composition(name="test", children=[it])
@@ -667,6 +702,9 @@ class StackTest(unittest.TestCase, otio_test_utils.OTIOAssertions):
         with self.assertRaises(otio.exceptions.NotAChildError):
             otio.schema.Clip().trimmed_range_in_parent()
 
+        with self.assertRaises(otio.exceptions.NotAChildError):
+            otio.schema.Clip().range_in_parent()
+
     def test_transformed_time(self):
         st = otio.schema.Stack(
             name="foo",
@@ -999,6 +1037,16 @@ class TrackTest(unittest.TestCase, otio_test_utils.OTIOAssertions):
         sq = otio.schema.Track(children=[it])
         del sq
         self.assertIsNone(it.parent())
+
+    def test_orphan_is_not_descended_from_composition(self):
+        stack = otio.schema.Stack()
+        orphan = otio.schema.Clip()
+
+        with self.assertRaises(otio.exceptions.NotAChildError):
+            stack.range_of_child(orphan)
+
+        with self.assertRaises(otio.exceptions.NotAChildError):
+            stack.trimmed_range_of_child(orphan)
 
     def test_transactional(self):
         item = otio.core.Item()
