@@ -16,9 +16,7 @@ ensures that regardless of which platform a bundle was created on, it can be
 read on unix and windows platforms.
 """
 
-from .. import (
-    _otio
-)
+from .. import _otio
 
 
 def read_from_file(
@@ -38,7 +36,7 @@ def write_to_file(
     relative_media_base_dir=None,
     # see documentation in bundle. for more information on the media_policy
     media_policy=_otio.bundle.MediaReferencePolicy.error_if_not_file,
-    dryrun=False
+    dryrun=False,
 ):
     options = _otio.bundle.WriteOptions()
     options.relative_media_base_dir = relative_media_base_dir

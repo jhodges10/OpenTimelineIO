@@ -1,0 +1,27 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Format Python",
+      "type": "process",
+      "command": "uv",
+      "args": [
+        "run", "--locked", "--only-group", "lint",
+        "python", "maintainers/format_python.py"
+      ],
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Check Python formatting",
+      "type": "process",
+      "command": "uv",
+      "args": [
+        "run", "--locked", "--only-group", "lint",
+        "python", "maintainers/format_python.py", "--check"
+      ],
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
+    }
+  ]
+}

@@ -6,7 +6,7 @@
 .. moduleauthor:: Contributors to the OpenTimelineIO project <otio-discussion@lists.aswf.io>
 """
 
-# flake8: noqa
+# ruff: noqa
 
 # in dependency hierarchy
 from . import (
@@ -18,4 +18,3 @@ from . import (
     autogen_serialized_datamodel,
     otiopluginfo,
 )
-

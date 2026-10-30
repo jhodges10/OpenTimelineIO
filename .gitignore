@@ -7,7 +7,10 @@ dist*
 coverage.info
 .DS_store
 htmlcov
-.vscode/
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+!.vscode/tasks.json
 xcuserdata/
 .venv/
 .cache
@@ -23,3 +26,8 @@ cpp_cov_html/
 lcov_html_report/
 *.so
 *.pyd
+
+.ruff_cache/
+.coverage.*
+coverage.xml
+coverage_html_report/

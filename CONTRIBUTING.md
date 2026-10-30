@@ -38,7 +38,24 @@ Here are the two possible CLAs:
 * [OTIO_CLA_Individual.pdf](https://github.com/AcademySoftwareFoundation/OpenTimelineIO/raw/main/OTIO_CLA_Individual.pdf): please sign this one if you're an individual contributor
 
 ## Coding Conventions
-Please follow the coding convention and style in each file and in each library when adding new files.
+
+Python style is checked with Ruff, configured in `pyproject.toml`. Use double
+quotes and omit trailing commas from list literals. Run `uv sync --locked` after
+initializing submodules, then `make lint` and `make format-check`. `make format-python` runs
+Ruff's formatter followed by lint autofixes and list-comma cleanup; the order is
+important because the formatter introduces commas that the final cleanup removes.
+C++ continues to use the existing clang-format configuration.
+
+VS Code workspace settings select Ruff and the `.venv` interpreter. Saving applies
+lint fixes and sorts imports; the **Format Python** task runs the complete
+formatter/autofix pipeline. Automatic formatting on save is disabled so formatting
+cannot undo the comma fixes after VS Code runs its save code actions.
+
+The default uv development group includes lint and test tools. Documentation
+uses `uv sync --locked --group docs` (Python 3.11+). Commit `uv.lock` when changing
+dependencies; use `uv lock --upgrade` to intentionally refresh pinned versions.
+For VFX builds, preserve the interpreter and compiler supplied by the Reference
+Platform environment; see the [developer quickstart](docs/tutorials/quickstart.md).
 
 ## Git Workflow
 Here is the workflow we recommend for working on OpenTimelineIO if you intend on contributing changes back:
@@ -80,6 +97,7 @@ Once you are happy with your change, you can verify that the change didn't cause
 ```bash
 make test
 make lint
+make format-check
 ```
 
 If all the tests pass and you'd like to send your change in for consideration, push it to your remote repo:
