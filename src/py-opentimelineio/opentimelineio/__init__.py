@@ -19,6 +19,7 @@ from . import (
     schemadef,
     plugins,
     media_linker,
+    effects_linker,
     adapters,
     hooks,
     algorithms,

@@ -38,7 +38,8 @@ To create a new OTIO hook script, you need to create a file myhooks.py. Then add
         "pre_adapter_write" : ["example hook"],
         "post_adapter_read" : [],
         "post_adapter_write" : [],
-        "post_media_linker" : []
+        "post_media_linker" : [],
+        "post_effects_linker" : []
     }
 }
 ```
@@ -179,6 +180,7 @@ The new hooks also need to be added to the adapter plugin manifest.
         "post_adapter_read" : [],
         "post_adapter_write" : [],
         "post_media_linker" : [],
+        "post_effects_linker" : [],
         "my_custom_adapter_hook" : ["script_attached_to_custom_adapter_hook"]
     }
 }

@@ -38,6 +38,125 @@
 
 namespace opentimelineio { namespace OPENTIMELINEIO_VERSION_NS {
 
+namespace {
+
+// Effect.2 and Transition.2 keep their new fields in metadata["otio.fx"]
+// when written for an older reader, and restore them when read back.
+constexpr char const* otio_fx_key = "otio.fx";
+
+constexpr char const* effect_v2_keys[] = { "effect_id",    "effect_version",
+                                           "host",         "host_version",
+                                           "context",      "parameters" };
+
+constexpr char const* transition_v2_keys[] = { "effect" };
+
+bool
+_is_empty_value(std::any const& value)
+{
+    if (!value.has_value())
+    {
+        return true;
+    }
+    if (value.type() == typeid(std::string))
+    {
+        return std::any_cast<std::string const&>(value).empty();
+    }
+    if (value.type() == typeid(AnyDictionary))
+    {
+        return std::any_cast<AnyDictionary const&>(value).empty();
+    }
+    if (value.type() == typeid(SerializableObject::Retainer<>))
+    {
+        return !std::any_cast<SerializableObject::Retainer<> const&>(value)
+                    .value;
+    }
+    return false;
+}
+
+// Move the non-empty values of `keys` out of `d` and into
+// d["metadata"]["otio.fx"], keeping whatever is already there.
+template <typename Keys>
+void
+_stash_in_otio_fx(AnyDictionary* d, Keys const& keys)
+{
+    AnyDictionary stash;
+    for (char const* key: keys)
+    {
+        auto it = d->find(key);
+        if (it == d->end())
+        {
+            continue;
+        }
+        if (!_is_empty_value(it->second))
+        {
+            stash[key] = it->second;
+        }
+        d->erase(it);
+    }
+    if (stash.empty())
+    {
+        return;
+    }
+
+    AnyDictionary metadata;
+    d->get_if_set("metadata", &metadata);
+    AnyDictionary otio_fx;
+    metadata.get_if_set(otio_fx_key, &otio_fx);
+    for (auto const& kv: stash)
+    {
+        otio_fx[kv.first] = kv.second;
+    }
+    metadata[otio_fx_key] = otio_fx;
+    (*d)["metadata"]      = metadata;
+}
+
+// The reverse of _stash_in_otio_fx: move `keys` found in
+// d["metadata"]["otio.fx"] back onto `d`, dropping "otio.fx" if it empties.
+template <typename Keys>
+void
+_restore_from_otio_fx(AnyDictionary* d, Keys const& keys)
+{
+    AnyDictionary metadata;
+    if (!d->get_if_set("metadata", &metadata))
+    {
+        return;
+    }
+    AnyDictionary otio_fx;
+    if (!metadata.get_if_set(otio_fx_key, &otio_fx))
+    {
+        return;
+    }
+
+    bool restored = false;
+    for (char const* key: keys)
+    {
+        auto it = otio_fx.find(key);
+        if (it == otio_fx.end())
+        {
+            continue;
+        }
+        (*d)[key] = it->second;
+        otio_fx.erase(it);
+        restored = true;
+    }
+    if (!restored)
+    {
+        return;
+    }
+
+    if (otio_fx.empty())
+    {
+        metadata.erase(otio_fx_key);
+    }
+    else
+    {
+        metadata[otio_fx_key] = otio_fx;
+    }
+    (*d)["metadata"] = metadata;
+}
+
+} // namespace
+
 TypeRegistry&
 TypeRegistry::TypeRegistry::instance()
 {
@@ -156,6 +275,16 @@ TypeRegistry::TypeRegistry()
         }
     });
 
+    // 1->2: restore the fields an Effect.2 -> Effect.1 downgrade stashed.
+    register_upgrade_function(Effect::Schema::name, 2, [](AnyDictionary* d) {
+        _restore_from_otio_fx(d, effect_v2_keys);
+    });
+
+    register_upgrade_function(
+        Transition::Schema::name,
+        2,
+        [](AnyDictionary* d) { _restore_from_otio_fx(d, transition_v2_keys); });
+
     register_upgrade_function(Clip::Schema::name, 2, [](AnyDictionary* d) {
         auto media_ref = (*d)["media_reference"];
 
@@ -215,6 +344,16 @@ TypeRegistry::TypeRegistry()
             }
         }
     });
+
+    // 2->1: keep the new fields in metadata["otio.fx"].
+    register_downgrade_function(Effect::Schema::name, 2, [](AnyDictionary* d) {
+        _stash_in_otio_fx(d, effect_v2_keys);
+    });
+
+    register_downgrade_function(
+        Transition::Schema::name,
+        2,
+        [](AnyDictionary* d) { _stash_in_otio_fx(d, transition_v2_keys); });
 
     // 2->1
     register_downgrade_function(Clip::Schema::name, 2, [](AnyDictionary* d) {

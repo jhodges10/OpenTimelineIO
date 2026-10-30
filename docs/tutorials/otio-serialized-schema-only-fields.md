@@ -73,6 +73,14 @@ parameters:
 - *metadata*
 - *name*
 
+## Module: opentimelineio.effects_linker
+
+### EffectsLinker.1
+
+parameters:
+- *filepath*
+- *name*
+
 ## Module: opentimelineio.hooks
 
 ### HookScript.1
@@ -116,6 +124,7 @@ parameters:
 
 parameters:
 - *adapters*
+- *effects_linkers*
 - *hook_scripts*
 - *hooks*
 - *media_linkers*
@@ -152,13 +161,19 @@ parameters:
 - *name*
 - *r*
 
-### Effect.1
+### Effect.2
 
 parameters:
+- *context*
+- *effect_id*
 - *effect_name*
+- *effect_version*
 - *enabled*
+- *host*
+- *host_version*
 - *metadata*
 - *name*
+- *parameters*
 
 ### ExternalReference.1
 
@@ -172,10 +187,16 @@ parameters:
 ### FreezeFrame.1
 
 parameters:
+- *context*
+- *effect_id*
 - *effect_name*
+- *effect_version*
 - *enabled*
+- *host*
+- *host_version*
 - *metadata*
 - *name*
+- *parameters*
 - *time_scalar*
 
 ### Gap.1
@@ -218,10 +239,16 @@ parameters:
 ### LinearTimeWarp.1
 
 parameters:
+- *context*
+- *effect_id*
 - *effect_name*
+- *effect_version*
 - *enabled*
+- *host*
+- *host_version*
 - *metadata*
 - *name*
+- *parameters*
 - *time_scalar*
 
 ### Marker.3
@@ -261,10 +288,16 @@ parameters:
 ### TimeEffect.1
 
 parameters:
+- *context*
+- *effect_id*
 - *effect_name*
+- *effect_version*
 - *enabled*
+- *host*
+- *host_version*
 - *metadata*
 - *name*
+- *parameters*
 
 ### Timeline.1
 
@@ -286,9 +319,10 @@ parameters:
 - *name*
 - *source_range*
 
-### Transition.1
+### Transition.2
 
 parameters:
+- *effect*
 - *enabled*
 - *in_offset*
 - *metadata*
