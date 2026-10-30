@@ -57,6 +57,19 @@ dependencies; use `uv lock --upgrade` to intentionally refresh pinned versions.
 For VFX builds, preserve the interpreter and compiler supplied by the Reference
 Platform environment; see the [developer quickstart](docs/tutorials/quickstart.md).
 
+## Development environment
+
+The checked-in `.devcontainer` uses the CY2026 ASWF image and installs the uv
+development and documentation groups on creation. Open the repository with
+**Dev Containers: Reopen in Container** to use it. Its Python environment and
+extension-build cache are separate from the host's `.venv` and build outputs.
+Use a native Linux x86-64 Docker host for the ASWF image.
+
+The VS Code task picker provides the common build, test, lint, coverage, and docs
+commands. C++ tasks use `CMakePresets.json`: select `vfx2026` in the container or
+`dev` on your host, configure once, then build and test with the same preset.
+See the [development instructions](README.md#development-container) for details.
+
 ## Git Workflow
 Here is the workflow we recommend for working on OpenTimelineIO if you intend on contributing changes back:
 
