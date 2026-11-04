@@ -334,6 +334,7 @@ setup(
     package_data={
         'opentimelineio': [
             'adapters/builtin_adapters.plugin_manifest.json',
+            'adapters/otio_fx_registry.json',
         ],
     },
 

@@ -46,6 +46,7 @@ Tutorials
    tutorials/otio-filebundles
    tutorials/write-an-adapter
    tutorials/write-a-media-linker
+   tutorials/write-an-effects-linker
    tutorials/write-a-hookscript
    tutorials/write-a-schemadef
    tutorials/spatial-coordinates

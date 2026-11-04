@@ -27,6 +27,7 @@ The most interesting pieces of OTIO to a developer integrating OTIO into another
 
 Additionally, for developers integrating OTIO into a studio pipeline:
 - `otio.media_linker`: Plugin system for writing studio or workflow specific media linkers that run after adapters read files
+- `otio.effects_linker`: Plugin system for effects linkers that rewrite effects into a common vocabulary after media linking
 
 The in-memory OTIO representation data model is rooted at an `otio.schema.Timeline` which has a member `tracks` which is a `otio.schema.Stack` of `otio.schema.Track`, which contain a list of items such as:
 - `otio.schema.Clip`
@@ -130,6 +131,12 @@ Media linkers run on the otio file after an adapter calls `.read_from_file()` or
 You may also specify a media linker to be run after the adapter, either via the `media_linker_name` argument to `.read_from_file()` or `.read_from_string()` or via the {term}`OTIO_DEFAULT_MEDIA_LINKER` environment variable.  You can also turn the media linker off completely by setting the `media_linker_name` argument to `otio.media_linker.MediaLinkingPolicy.DoNotLinkMedia`.
 
 For more information about writing media linkers, see [How To Write An OpenTimelineIO Media Linker](write-a-media-linker).
+
+## otio.effects_linker
+
+Effects linkers run after the media linker and rewrite effects, for example mapping host-native effects onto the `otio.fx.*` registry. They are chosen the same way as media linkers: the `effects_linker_name` argument to `.read_from_file()` or `.read_from_string()`, or the {term}`OTIO_DEFAULT_EFFECTS_LINKER` environment variable, and `otio.effects_linker.EffectsLinkingPolicy.DoNotLinkEffects` turns them off. A `post_effects_linker` hook runs after them.
+
+For more information, see [How To Write An OpenTimelineIO Effects Linker](write-an-effects-linker).
 
 Example Scripts
 ----------------

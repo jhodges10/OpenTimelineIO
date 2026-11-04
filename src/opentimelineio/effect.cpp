@@ -10,10 +10,22 @@ Effect::Effect(
     std::string const&   name,
     std::string const&   effect_name,
     AnyDictionary const& metadata,
-    bool                 enabled)
+    bool                 enabled,
+    std::string const&   effect_id,
+    std::string const&   effect_version,
+    std::string const&   host,
+    std::string const&   host_version,
+    std::string const&   context,
+    AnyDictionary const& parameters)
     : Parent(name, metadata)
     , _effect_name(effect_name)
     , _enabled(enabled)
+    , _effect_id(effect_id)
+    , _effect_version(effect_version)
+    , _host(host)
+    , _host_version(host_version)
+    , _context(context)
+    , _parameters(parameters)
 {}
 
 Effect::~Effect()
@@ -24,6 +36,12 @@ Effect::read_from(Reader& reader)
 {
     return reader.read("effect_name", &_effect_name)
            && reader.read_if_present("enabled", &_enabled)
+           && reader.read_if_present("effect_id", &_effect_id)
+           && reader.read_if_present("effect_version", &_effect_version)
+           && reader.read_if_present("host", &_host)
+           && reader.read_if_present("host_version", &_host_version)
+           && reader.read_if_present("context", &_context)
+           && reader.read_if_present("parameters", &_parameters)
            && Parent::read_from(reader);
 }
 
@@ -33,6 +51,12 @@ Effect::write_to(Writer& writer) const
     Parent::write_to(writer);
     writer.write("effect_name", _effect_name);
     writer.write("enabled", _enabled);
+    writer.write("effect_id", _effect_id);
+    writer.write("effect_version", _effect_version);
+    writer.write("host", _host);
+    writer.write("host_version", _host_version);
+    writer.write("context", _context);
+    writer.write("parameters", _parameters);
 }
 
 }} // namespace opentimelineio::OPENTIMELINEIO_VERSION_NS
