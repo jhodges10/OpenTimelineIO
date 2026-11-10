@@ -21,3 +21,10 @@ from .filter import (
 from .timeline_algo import (
     timeline_trimmed_to_range
 )
+from .multicam_algo import (
+    MulticamResolutionError,
+    angle_tracks,
+    flatten_multicam,
+    resolve_multicam_clip,
+    validate_multicams,
+)

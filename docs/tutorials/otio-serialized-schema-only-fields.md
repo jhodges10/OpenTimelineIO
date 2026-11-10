@@ -241,6 +241,32 @@ parameters:
 - *metadata*
 - *name*
 
+### Multicam.1
+
+parameters:
+- *color*
+- *effects*
+- *enabled*
+- *global_start_time*
+- *markers*
+- *metadata*
+- *name*
+- *source_range*
+
+### MulticamClip.1
+
+parameters:
+- *angle*
+- *angle_track*
+- *color*
+- *effects*
+- *enabled*
+- *markers*
+- *metadata*
+- *multicam*
+- *name*
+- *source_range*
+
 ### SerializableCollection.1
 
 parameters:

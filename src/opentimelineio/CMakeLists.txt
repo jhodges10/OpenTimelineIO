@@ -24,6 +24,8 @@ set(OPENTIMELINEIO_HEADER_FILES
     marker.h
     mediaReference.h
     missingReference.h
+    multicam.h
+    multicamClip.h
     safely_typed_any.h
     serializableCollection.h
     serializableObject.h
@@ -61,6 +63,8 @@ add_library(opentimelineio ${OTIO_SHARED_OR_STATIC_LIB}
     marker.cpp
     mediaReference.cpp
     missingReference.cpp
+    multicam.cpp
+    multicamClip.cpp
     safely_typed_any.cpp
     serializableCollection.cpp
     serializableObject.cpp

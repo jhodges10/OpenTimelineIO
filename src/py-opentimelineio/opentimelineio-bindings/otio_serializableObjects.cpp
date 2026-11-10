@@ -21,6 +21,8 @@
 #include "opentimelineio/marker.h"
 #include "opentimelineio/mediaReference.h"
 #include "opentimelineio/missingReference.h"
+#include "opentimelineio/multicam.h"
+#include "opentimelineio/multicamClip.h"
 #include "opentimelineio/serializableCollection.h"
 #include "opentimelineio/stack.h"
 #include "opentimelineio/timeEffect.h"
@@ -97,7 +99,21 @@ find_children(
     bool                            shallow_search = false)
 {
     std::vector<SerializableObject*> l;
-    if (find_children<T, Clip>(
+    if (find_children<T, MulticamClip>(
+            t,
+            descended_from_type,
+            search_range,
+            shallow_search,
+            l))
+        ;
+    else if (find_children<T, Multicam>(
+                 t,
+                 descended_from_type,
+                 search_range,
+                 shallow_search,
+                 l))
+        ;
+    else if (find_children<T, Clip>(
             t,
             descended_from_type,
             search_range,
@@ -796,6 +812,52 @@ Other effects are handled by the :class:`Effect` class.
             "markers"_a  = py::none(),
             py::arg_v("metadata"_a = py::none()));
 
+    py::class_<MulticamClip, Item, managing_ptr<MulticamClip>>(
+        m,
+        "MulticamClip",
+        py::dynamic_attr(),
+        R"docstring(
+EXPERIMENTAL (OTIO issue #427). One cut to one angle of a :class:`.Multicam`, on one track.
+``multicam`` is the key in :attr:`.Timeline.multicams`; ``source_range`` is in multicam time;
+``angle_track`` counts only the angle's tracks of this item's track kind.
+)docstring")
+        .def(
+            py::init([](std::string                         name,
+                        std::string                         multicam,
+                        std::string                         angle,
+                        int                                 angle_track,
+                        std::optional<TimeRange>            source_range,
+                        std::optional<std::vector<Effect*>> effects,
+                        std::optional<std::vector<Marker*>> markers,
+                        py::object                          metadata) {
+                return new MulticamClip(
+                    name,
+                    multicam,
+                    angle,
+                    angle_track,
+                    source_range,
+                    py_to_any_dictionary(metadata),
+                    vector_or_default<Effect>(effects),
+                    vector_or_default<Marker>(markers));
+            }),
+            py::arg_v("name"_a = std::string()),
+            "multicam"_a     = std::string(),
+            "angle"_a        = std::string(),
+            "angle_track"_a  = 0,
+            "source_range"_a = std::nullopt,
+            "effects"_a      = py::none(),
+            "markers"_a      = py::none(),
+            py::arg_v("metadata"_a = py::none()))
+        .def_property(
+            "multicam",
+            &MulticamClip::multicam,
+            &MulticamClip::set_multicam)
+        .def_property("angle", &MulticamClip::angle, &MulticamClip::set_angle)
+        .def_property(
+            "angle_track",
+            &MulticamClip::angle_track,
+            &MulticamClip::set_angle_track);
+
     auto clip_class =
         py::class_<Clip, Item, managing_ptr<Clip>>(
             m,
@@ -1145,6 +1207,46 @@ Should be subclassed (for example by :class:`.Track` and :class:`.Stack`), not u
             "effects"_a      = py::none(),
             py::arg_v("metadata"_a = py::none()));
 
+    py::class_<Multicam, Stack, managing_ptr<Multicam>>(
+        m,
+        "Multicam",
+        py::dynamic_attr(),
+        R"docstring(
+EXPERIMENTAL (OTIO issue #427). A multicam definition: one :class:`.Stack` per angle, held once in
+:attr:`.Timeline.multicams` and played by :class:`.MulticamClip` items. An angle's name is its identity.
+)docstring")
+        .def(
+            py::init([](std::string                         name,
+                        std::optional<std::vector<Stack*>>  angles,
+                        std::optional<RationalTime>         global_start_time,
+                        py::object                          metadata) {
+                Multicam* mc = new Multicam(
+                    name,
+                    global_start_time,
+                    py_to_any_dictionary(metadata));
+                auto kids = vector_or_default<Stack>(angles);
+                if (!kids.empty())
+                {
+                    std::vector<Composable*> composables(kids.begin(), kids.end());
+                    mc->set_children(composables, ErrorStatusHandler());
+                }
+                return mc;
+            }),
+            py::arg_v("name"_a = std::string()),
+            "angles"_a            = py::none(),
+            "global_start_time"_a = std::nullopt,
+            py::arg_v("metadata"_a = py::none()))
+        .def_property(
+            "global_start_time",
+            &Multicam::global_start_time,
+            &Multicam::set_global_start_time)
+        .def(
+            "angle",
+            [](Multicam* mc, std::string const& name) { return mc->angle(name); },
+            "name"_a,
+            "Return the angle :class:`.Stack` with this name, or None.")
+        .def("angle_names", &Multicam::angle_names);
+
     py::class_<
         Timeline,
         SerializableObjectWithMetadata,
@@ -1175,6 +1277,36 @@ Should be subclassed (for example by :class:`.Track` and :class:`.Stack`), not u
             &Timeline::global_start_time,
             &Timeline::set_global_start_time)
         .def_property("tracks", &Timeline::tracks, &Timeline::set_tracks)
+        .def(
+            "multicams",
+            [](Timeline* t) {
+                std::map<std::string, Multicam*> result;
+                for (auto const& m: t->multicams())
+                {
+                    result[m.first] = m.second.value;
+                }
+                return result;
+            },
+            "EXPERIMENTAL: the multicam definitions held by this timeline, by key.")
+        .def(
+            "set_multicams",
+            [](Timeline* t, std::map<std::string, Multicam*> const& multicams) {
+                Timeline::Multicams retained;
+                for (auto const& m: multicams)
+                {
+                    retained[m.first] = m.second;
+                }
+                t->set_multicams(retained);
+            },
+            "multicams"_a)
+        .def(
+            "multicam",
+            [](Timeline* t, std::string const& key) { return t->multicam(key); },
+            "key"_a)
+        .def(
+            "multicam_for",
+            [](Timeline* t, MulticamClip* clip) { return t->multicam_for(clip); },
+            "multicam_clip"_a)
         .def(
             "duration",
             [](Timeline* t) { return t->duration(ErrorStatusHandler()); })
