@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include "opentimelineio/multicam.h"
 #include "opentimelineio/serializableObjectWithMetadata.h"
 #include "opentimelineio/stack.h"
 #include "opentimelineio/track.h"
@@ -79,6 +80,24 @@ public:
     /// @brief Return the list of video tracks.
     OTIO_API std::vector<Track*> video_tracks() const;
 
+    /// @brief The multicam definitions held by this timeline, by key.
+    ///
+    /// EXPERIMENTAL: prototype for OTIO issue #427.
+    using Multicams = std::map<std::string, Retainer<Multicam>>;
+
+    /// @brief Return the multicam definitions, by key.
+    Multicams const& multicams() const noexcept { return _multicams; }
+
+    /// @brief Set the multicam definitions, by key.
+    OTIO_API void set_multicams(Multicams const& multicams);
+
+    /// @brief Return the multicam with this key, or null.
+    OTIO_API Multicam* multicam(std::string const& key) const noexcept;
+
+    /// @brief Return the multicam a MulticamClip plays, or null.
+    OTIO_API Multicam*
+    multicam_for(class MulticamClip const* multicam_clip) const noexcept;
+
     /// @brief Find child clips.
     ///
     /// @param error_status The return status.
@@ -118,6 +137,7 @@ protected:
 private:
     std::optional<RationalTime> _global_start_time;
     Retainer<Stack>             _tracks;
+    Multicams                   _multicams;
 };
 
 template <typename T>

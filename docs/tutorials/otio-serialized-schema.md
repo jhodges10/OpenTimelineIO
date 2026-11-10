@@ -559,6 +559,52 @@ parameters:
 - *metadata*: 
 - *name*: 
 
+### Multicam.1
+
+*full module path*: `opentimelineio.schema.Multicam`
+
+*documentation*:
+
+```
+EXPERIMENTAL (OTIO issue #427). A multicam definition: one :class:`.Stack` per angle, held once in
+:attr:`.Timeline.multicams` and played by :class:`.MulticamClip` items. An angle's name is its 
+identity.
+```
+
+parameters:
+- *color*: 
+- *effects*: 
+- *enabled*: If true, an Item contributes to compositions. For example, when an audio/video clip is ``enabled=false`` the clip is muted/hidden.
+- *global_start_time*: 
+- *markers*: 
+- *metadata*: 
+- *name*: 
+- *source_range*: 
+
+### MulticamClip.1
+
+*full module path*: `opentimelineio.schema.MulticamClip`
+
+*documentation*:
+
+```
+EXPERIMENTAL (OTIO issue #427). One cut to one angle of a :class:`.Multicam`, on one track.
+``multicam`` is the key in :attr:`.Timeline.multicams`; ``source_range`` is in multicam time;
+``angle_track`` counts only the angle's tracks of this item's track kind.
+```
+
+parameters:
+- *angle*: 
+- *angle_track*: 
+- *color*: 
+- *effects*: 
+- *enabled*: If true, an Item contributes to compositions. For example, when an audio/video clip is ``enabled=false`` the clip is muted/hidden.
+- *markers*: 
+- *metadata*: 
+- *multicam*: 
+- *name*: 
+- *source_range*: 
+
 ### SerializableCollection.1
 
 *full module path*: `opentimelineio.schema.SerializableCollection`

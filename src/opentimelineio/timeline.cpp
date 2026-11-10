@@ -3,6 +3,7 @@
 
 #include "opentimelineio/timeline.h"
 #include "opentimelineio/clip.h"
+#include "opentimelineio/multicamClip.h"
 
 namespace opentimelineio { namespace OPENTIMELINEIO_VERSION_NS {
 
@@ -24,11 +25,38 @@ Timeline::set_tracks(Stack* stack)
     _tracks = stack ? stack : new Stack("tracks");
 }
 
+void
+Timeline::set_multicams(Multicams const& multicams)
+{
+    _multicams.clear();
+    for (auto const& m: multicams)
+    {
+        if (m.second)
+        {
+            _multicams[m.first] = m.second;
+        }
+    }
+}
+
+Multicam*
+Timeline::multicam(std::string const& key) const noexcept
+{
+    auto found = _multicams.find(key);
+    return found == _multicams.end() ? nullptr : found->second.value;
+}
+
+Multicam*
+Timeline::multicam_for(MulticamClip const* multicam_clip) const noexcept
+{
+    return multicam_clip ? multicam(multicam_clip->multicam()) : nullptr;
+}
+
 bool
 Timeline::read_from(Reader& reader)
 {
     return reader.read("tracks", &_tracks)
            && reader.read_if_present("global_start_time", &_global_start_time)
+           && reader.read_if_present("multicams", &_multicams)
            && Parent::read_from(reader);
 }
 
@@ -38,6 +66,10 @@ Timeline::write_to(Writer& writer) const
     Parent::write_to(writer);
     writer.write("global_start_time", _global_start_time);
     writer.write("tracks", _tracks);
+    if (!_multicams.empty())
+    {
+        writer.write("multicams", _multicams);
+    }
 }
 
 std::vector<Track*>
